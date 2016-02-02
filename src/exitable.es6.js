@@ -5,26 +5,29 @@ let roots = new Map()
 
 // Register views to bind their roots to the above
 const register = view =>
-  function registeredView( { exit } : ctrl ){
+  function registeredView( ctrl ){
     const output = view( ...arguments )
     const { attrs : { config } } = output
     
-    attrs.config = function superConfig( el ){
-      roots.set( ctrl, el )
+    if( ctrl.exit )
+      attrs.config = function superConfig( el ){
+        roots.set( ctrl, el )
       
-      if( config )
-        return config.call( this, ...arguments )
-    }
+        if( config )
+          return config.call( this, ...arguments )
+      }
+    
+    return output
   }
 
 // Root components (those mounted or routed) are the source of redraws.
 // Before they draw, there is no stateful virtual DOM.
 // Therefore their view execution is the source of all truth in what is currently rendered.
-const root = ( { view } : component ) =>
+const root = ( { view, ...component } ) =>
   Object.assign( component, {
     view : function rootView(){
       // All previously registered exitable components are saved here
-      const previous = roots.entries()
+      const previous = Array.from( roots )
       
       // Then we reset
       roots.clear()
@@ -38,14 +41,14 @@ const root = ( { view } : component ) =>
       // For every previous exitable instance...
       for( let [ ctrl, el ] of previous )
         // ...if it hasn't re-registered...
-        if( roots.has( ctrl ) )
+        if( !roots.has( ctrl ) )
           // It's gone! Call the exit method and keep its output.
           exits.push( ctrl.exit( el ) )
       
       // If we have exits...
       if( exits.length ){
         // Noop this draw
-        let output = { subtree : 'retain' }
+        output = { subtree : 'retain' }
         
         // ...and all subsequent ones...
         m.startComputation()
@@ -75,14 +78,15 @@ export default Object.assign(
   function m(){
     const output = m( ...arguments )
     
-    output.children.forEach(
-      ( { view } : child ) =>
-        view && Object.assign(
-          child,
-          // ...and get their views to register controllers and root nodes
-          { view : register( view ) } 
-        )
-    )
+    output.children.forEach( child => {
+      const { view } = child
+
+      if( view )
+        // ...and get their views to register controllers and root nodes
+        Object.assign( child, {
+          view : register( view )
+        } )
+    } )
     
     return output
   },
