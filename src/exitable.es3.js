@@ -7,16 +7,20 @@ window.m = ( function( mithril ){
     return function registeredView( ctrl ){
       var output = view.apply( this, arguments )
 
-      while( 'length' in output )
-        output = output[ 0 ]
+      if( ctrl.exit ){
+        var node = output
 
-      var config = 'config' in output.attrs && output.attrs.config
-      
-      output.attrs.config = function superConfig( el ){
-        roots.set( ctrl, el )
+        while( node.length )
+          node = node[ 0 ]
+
+        var config = node.attrs.config
         
-        if( config )
-          return config.apply( this, arguments )
+        node.attrs.config = function superConfig( el ){
+          roots.set( ctrl, el )
+          
+          if( config )
+            return config.apply( this, arguments )
+        }
       }
 
       return output
@@ -35,7 +39,7 @@ window.m = ( function( mithril ){
   
     function rootView(){
       // All previously registered exitable components are saved here
-      var previous = roots.entries()
+      var previous = array( roots )
       
       // Then we reset
       roots.clear()
@@ -47,17 +51,11 @@ window.m = ( function( mithril ){
       var exits    = []
       
       // For every previous exitable instance...
-      while( true ){
-        var step = previous.next()
-
-        if( step.done )
-          break
-
+      for( var i = 0; i < previous.length; i++ )
         // ...if it hasn't re-registered...
-        if( roots.has( step.value[ 0 ] ) )
+        if( !roots.has( previous[ i ][ 0 ] ) )
           // It's gone! Call the exit method and keep its output.
-          exits.push( step.value[ 0 ].exit( entry[ 1 ] ) )
-      }
+          exits.push( previous[ i ][ 0 ].exit( previous[ i ][ 1 ] ) )
 
       
       // If we have exits...
@@ -87,13 +85,29 @@ window.m = ( function( mithril ){
     return output
   }
 
+  function array( map ){
+    var array   = []
+    var entries = map.entries()
+
+    while( true ){
+      var entry = entries.next()
+
+      if( entry.done )
+        break
+
+      array.push( entry.value )
+    }
+
+    return array
+  }
+
   // Export a patched Mithril API
 
   // Core m function needs to sniff out components...
   function m(){
     var output = mithril.apply( this, arguments )
 
-    for( var i = 0; i < output.children; i++ )
+    for( var i = 0; i < output.children.length; i++ )
       if( output.children[ i ].view )
         output.children[ i ].view = register( output.children[ i ].view )
     
