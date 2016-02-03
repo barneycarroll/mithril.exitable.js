@@ -1,12 +1,21 @@
 import m from 'mithril'
 
 // Registry of controllers and corresponding root nodes
-let roots = new Map()
+const roots     = new Map()
+// A record of recent view outputs for every root-level component
+const histories = new WeakMap()
+// Whether the current draw is being used to revert to a historical view state
+let   reverting = 0
 
 // Register views to bind their roots to the above
 const register = view =>
   function registeredView( ctrl ){
     const output = view( ...arguments )
+
+    // Don't register exits during a reversion
+    if( reverting )
+      return output
+
     const { attrs : { config } } = output
     
     if( ctrl.exit )
@@ -20,20 +29,43 @@ const register = view =>
     return output
   }
 
+
 // Root components (those mounted or routed) are the source of redraws.
 // Before they draw, there is no stateful virtual DOM.
 // Therefore their view execution is the source of all truth in what is currently rendered.
-const root = ( { view, ...component } ) =>
+const root = ( { controller = function(){}, view, ...component } ) =>
   Object.assign( component, {
-    view : function rootView(){
+    controller : function rootCtrl(){
+      const output = new controller( ...arguments )
+
+      // Register a log of view snapshots for this component
+      histories.set( output, [] )
+
+      return output
+    },
+    view : function rootView( ctrl ){
+      // Get the history of this component
+      const history = histories.get( ctrl )
+
+      // If we are in the middle of a reversion, we just want to patch 
+      // Mithril's internal virtual DOM HEAD to what it was before the
+      // last output
+      if( reverting )
+        return history[ reverting-- ]
+
       // All previously registered exitable components are saved here
       const previous = Array.from( roots )
       
       // Then we reset
       roots.clear()
-      
+
       // Execute the view, registering all exitables
-      let output   = register( view ).call( this, ...arguments )
+      let output     = register( view ).call( this, ...arguments )
+
+      // Otherwise we need to revord the new output
+      history.push( output )
+
+      history.length = 2
       
       // Now, set up a list of confirmed exits
       const exits    = []
@@ -50,12 +82,27 @@ const root = ( { view, ...component } ) =>
         // Noop this draw
         output = { subtree : 'retain' }
         
-        // ...and all subsequent ones...
+        // Freeze the draw process
         m.startComputation()
-        
        
         // ...until all exits have resolved
-        Promise.all( exits ).then( m.endComputation )
+        Promise.all( exits ).then( () => {
+          // We now need to revert Mithril's internal virtual DOM head so that 
+          // it will correctly patch the live DOM to match the state in which 
+          // components are removed: it currently believes that already happend
+          // Because it ran the diff before we told it to retain the subtree at
+          // the last minute
+          reverting = 2
+
+          // Next draw should not patch, only diff
+          m.redraw.strategy( 'none' )
+
+          // Force a synchronous draw despite being frozen
+          m.redraw( true )
+
+          // Resume business as usual
+          m.endComputation()
+        } )
       }
       
       return output
