@@ -1,22 +1,23 @@
-import m from 'mithril'
+import mithril from 'mithril'
 
 // Registry of controllers and corresponding root nodes
 const roots     = new Map()
 // A record of recent view outputs for every root-level component
 const histories = new WeakMap()
-// Whether the current draw is being used to revert to a historical view state
-let   reverting = 0
+// Whether the current draw is being used to revert to its previous state
+let   reverting = false
 
 // Register views to bind their roots to the above
 const register = view =>
   function registeredView( ctrl ){
-    const output = view( ...arguments )
+    const output     = view( ...arguments )
 
     // Don't register exits during a reversion
     if( reverting )
       return output
 
-    const { attrs : { config } } = output
+    const { attrs }  = output
+    const { config } = attrs
     
     if( ctrl.exit )
       attrs.config = function superConfig( el ){
@@ -33,25 +34,16 @@ const register = view =>
 // Root components (those mounted or routed) are the source of redraws.
 // Before they draw, there is no stateful virtual DOM.
 // Therefore their view execution is the source of all truth in what is currently rendered.
-const root = ( { controller = function(){}, view, ...component } ) =>
+const root = ( { view, ...component } ) =>
   Object.assign( component, {
-    controller : function rootCtrl(){
-      const output = new controller( ...arguments )
-
-      // Register a log of view snapshots for this component
-      histories.set( output, [] )
-
-      return output
-    },
     view : function rootView( ctrl ){
-      // Get the history of this component
       const history = histories.get( ctrl )
 
       // If we are in the middle of a reversion, we just want to patch 
       // Mithril's internal virtual DOM HEAD to what it was before the
       // last output
       if( reverting )
-        return history[ reverting-- ]
+        return history
 
       // All previously registered exitable components are saved here
       const previous = Array.from( roots )
@@ -63,9 +55,7 @@ const root = ( { controller = function(){}, view, ...component } ) =>
       let output     = register( view ).call( this, ...arguments )
 
       // Otherwise we need to revord the new output
-      history.push( output )
-
-      history.length = 2
+      histories.set( ctrl, output )
       
       // Now, set up a list of confirmed exits
       const exits    = []
@@ -92,13 +82,16 @@ const root = ( { controller = function(){}, view, ...component } ) =>
           // components are removed: it currently believes that already happend
           // Because it ran the diff before we told it to retain the subtree at
           // the last minute
-          reverting = 2
-
+          reverting = true
+          
           // Next draw should not patch, only diff
           m.redraw.strategy( 'none' )
 
           // Force a synchronous draw despite being frozen
           m.redraw( true )
+					
+          // Now it's as if we never here to begin with
+					reverting = false
 
           // Resume business as usual
           m.endComputation()
@@ -123,7 +116,7 @@ const reduce = ( object, transformer ) =>
 export default Object.assign(
   // Core m function needs to sniff out components...
   function m(){
-    const output = m( ...arguments )
+    const output = mithril( ...arguments )
     
     output.children.forEach( child => {
       const { view } = child
@@ -139,19 +132,19 @@ export default Object.assign(
   },
   
   // Then we have all the m methods 
-  m,
+  mithril,
   
   // Mount and Route need to register root components for snapshot logic
   {
     mount : ( el, component ) =>
-      m.mount( el, root( component ) ),
+      mithril.mount( el, root( component ) ),
     
     route( el, path, map ){
       if( map ){
-        return m.route( el, path, reduce( root ) )
+        return mithril.route( el, path, reduce( root ) )
       }
       else {
-        return m.route( ...arguments )
+        return mithril.route( ...arguments )
       }
     }
   }
