@@ -1,6 +1,10 @@
 window.m = ( function( mithril ){
   // Registry of controllers and corresponding root nodes
-  var roots = new Map()
+  var roots     = new Map()
+  // A record of recent view outputs for every root-level component
+  var histories = new WeakMap()
+  // Whether the current draw is being used to revert to its previous state
+  var reverting = false
 
   // Register views to bind their roots to the above
   function register( view ){
@@ -37,7 +41,13 @@ window.m = ( function( mithril ){
     
     return component
   
-    function rootView(){
+    function rootView( ctrl ){
+      // If we are in the middle of a reversion, we just want to patch 
+      // Mithril's internal virtual DOM HEAD to what it was before the
+      // last output
+      if( reverting )
+        return history.get( ctrl )
+      
       // All previously registered exitable components are saved here
       var previous = array( roots )
       
@@ -46,6 +56,9 @@ window.m = ( function( mithril ){
       
       // Execute the view, registering all exitables
       var output   = register( view ).apply( this, arguments )
+        
+        // Record the output, we will need to return to this state if the next draw has exits
+      history.set( ctrl, output )
       
       // Now, set up a list of confirmed exits
       var exits    = []
@@ -67,7 +80,26 @@ window.m = ( function( mithril ){
         mithril.startComputation()
        
         // ...until all exits have resolved
-        mithril.sync( exits ).then( mithril.endComputation )
+        mithril.sync( exits ).then( function(){
+          // We now need to revert Mithril's internal virtual DOM head so that 
+          // it will correctly patch the live DOM to match the state in which 
+          // components are removed: it currently believes that already happend
+          // Because it ran the diff before we told it to retain the subtree at
+          // the last minute
+          reverting = true
+          
+          // Next draw should not patch, only diff
+          m.redraw.strategy( 'none' )
+
+          // Force a synchronous draw despite being frozen
+          m.redraw( true )
+					
+          // Now it's as if we were never here to begin with
+          reverting = false
+
+          // Resume business as usual
+          m.endComputation()
+        } )
       }
       
       return output
