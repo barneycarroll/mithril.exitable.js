@@ -2,7 +2,7 @@ window.m = ( function( mithril ){
   // Registry of controllers and corresponding root nodes
   var roots     = new Map()
   // A record of recent view outputs for every root-level component
-  var histories = new WeakMap()
+  var history   = new WeakMap()
   // Whether the current draw is being used to revert to its previous state
   var reverting = false
 
