@@ -3,7 +3,7 @@ import mithril from 'mithril'
 // Registry of controllers and corresponding root nodes
 const roots     = new Map()
 // A record of recent view outputs for every root-level component
-const histories = new WeakMap()
+const history   = new WeakMap()
 // Whether the current draw is being used to revert to its previous state
 let   reverting = false
 
@@ -37,13 +37,11 @@ const register = view =>
 const root = ( { view, ...component } ) =>
   Object.assign( component, {
     view : function rootView( ctrl ){
-      const history = histories.get( ctrl )
-
       // If we are in the middle of a reversion, we just want to patch 
       // Mithril's internal virtual DOM HEAD to what it was before the
       // last output
       if( reverting )
-        return history
+        return history.get( ctrl )
 
       // All previously registered exitable components are saved here
       const previous = Array.from( roots )
@@ -54,8 +52,8 @@ const root = ( { view, ...component } ) =>
       // Execute the view, registering all exitables
       let output     = register( view ).call( this, ...arguments )
 
-      // Otherwise we need to revord the new output
-      histories.set( ctrl, output )
+      // Record the output, we will need to return to this state if the next draw has exits
+      history.set( ctrl, output )
       
       // Now, set up a list of confirmed exits
       const exits    = []
@@ -90,8 +88,8 @@ const root = ( { view, ...component } ) =>
           // Force a synchronous draw despite being frozen
           m.redraw( true )
 					
-          // Now it's as if we never here to begin with
-					reverting = false
+          // Now it's as if we were never here to begin with
+          reverting = false
 
           // Resume business as usual
           m.endComputation()
