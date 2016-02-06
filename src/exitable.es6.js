@@ -6,8 +6,9 @@ let roots = new Map()
 // Register views to bind their roots to the above
 const register = view =>
   function registeredView( ctrl ){
-    const output = view( ...arguments )
-    const { attrs : { config } } = output
+    const output     = view( ...arguments )
+    const { attrs }  = output
+    const { config } = attrs
     
     if( ctrl.exit )
       attrs.config = function superConfig( el ){
