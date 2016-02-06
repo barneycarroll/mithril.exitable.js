@@ -8,7 +8,7 @@ Exports a patched version of Mithril whose controllers gain a new exit hook to a
 
 When you bind an `exit` method to a controller, we observe the output of each global draw: as soon as we detect that the corresponding component has been removed from the view, the draw loop is frozen. exit functions are passed a reference to their component's live DOM root, and should return a thennable that resolves when you've completed your animations.
 
-[Check out this fiddle for a demo](https://jsfiddle.net/barney/5ecr8gnj/1).
+[Check out this fiddle for a simple demo](https://jsfiddle.net/barney/5ecr8gnj/1), and [see this extended demo](https://jsfiddle.net/barney/xko3kdaL/) for an example of entry & exit animating Mithril components – more demos to come…
 
 ES6 module reads easier and better shows the mechanisms at work.
 
