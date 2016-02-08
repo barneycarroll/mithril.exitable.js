@@ -158,7 +158,7 @@ window.m = ( function( mithril ){
 
   m.route = function( el, path, map ){
     if( map ){
-      return mithril.route( el, path, reduce( root ) )
+      return mithril.route( el, path, reduce( map, root ) )
     }
     else {
       return mithril.route.apply( this, arguments )
