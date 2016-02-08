@@ -110,7 +110,7 @@ window.m = ( function( mithril ){
   function reduce( object, transformer ){
     var output = {}
 
-    for( var key of object )
+    for( var key in object )
       if( Object.prototype.hasOwnProperty.call( object, key ) )
         output[ key ] = transformer( object[ key ] )
 
