@@ -18,10 +18,10 @@ window.m = ( function( mithril ){
           node = node[ 0 ]
 
         var config = node.attrs.config
-        
+
         node.attrs.config = function superConfig( el ){
           roots.set( ctrl, el )
-          
+
           if( config )
             return config.apply( this, arguments )
         }
@@ -36,33 +36,33 @@ window.m = ( function( mithril ){
   // Therefore their view execution is the source of all truth in what is currently rendered.
   function root( component ){
     var view = component.view
-    
+
     component.view = rootView
-    
+
     return component
-  
+
     function rootView( ctrl ){
-      // If we are in the middle of a reversion, we just want to patch 
+      // If we are in the middle of a reversion, we just want to patch
       // Mithril's internal virtual DOM HEAD to what it was before the
       // last output
       if( reverting )
         return history.get( ctrl )
-      
+
       // All previously registered exitable components are saved here
       var previous = array( roots )
-      
+
       // Then we reset
       roots.clear()
-      
+
       // Execute the view, registering all exitables
       var output   = register( view ).apply( this, arguments )
-        
+
         // Record the output, we will need to return to this state if the next draw has exits
       history.set( ctrl, output )
-      
+
       // Now, set up a list of confirmed exits
       var exits    = []
-      
+
       // For every previous exitable instance...
       for( var i = 0; i < previous.length; i++ )
         // ...if it hasn't re-registered...
@@ -70,30 +70,30 @@ window.m = ( function( mithril ){
           // It's gone! Call the exit method and keep its output.
           exits.push( previous[ i ][ 0 ].exit( previous[ i ][ 1 ] ) )
 
-      
+
       // If we have exits...
       if( exits.length ){
         // Noop this draw
         output = { subtree : 'retain' }
-        
+
         // ...and all subsequent ones...
         mithril.startComputation()
-       
+
         // ...until all exits have resolved
         mithril.sync( exits ).then( function(){
-          // We now need to revert Mithril's internal virtual DOM head so that 
-          // it will correctly patch the live DOM to match the state in which 
+          // We now need to revert Mithril's internal virtual DOM head so that
+          // it will correctly patch the live DOM to match the state in which
           // components are removed: it currently believes that already happend
           // Because it ran the diff before we told it to retain the subtree at
           // the last minute
           reverting = true
-          
+
           // Next draw should not patch, only diff
           m.redraw.strategy( 'none' )
 
           // Force a synchronous draw despite being frozen
           m.redraw( true )
-					
+
           // Now it's as if we were never here to begin with
           reverting = false
 
@@ -101,7 +101,7 @@ window.m = ( function( mithril ){
           m.endComputation()
         } )
       }
-      
+
       return output
     }
   }
@@ -142,15 +142,22 @@ window.m = ( function( mithril ){
     for( var i = 0; i < output.children.length; i++ )
       if( output.children[ i ].view )
         output.children[ i ].view = register( output.children[ i ].view )
-    
+
     return output
   }
 
-  // Then we have all the m methods 
+  // Then we have all the m methods
   for( var key in mithril )
     if( Object.prototype.hasOwnProperty.call( mithril, key ) )
       m[ key ] = mithril[ key ]
-    
+
+  m.component = function( component ){
+    component.view = register( component.view )
+
+    // I don't know how I coped without ES6 spread operator....
+    return mithril.component.apply( mithril, [ component ].concat( [].slice.call( arguments, 1 ) ) )
+  }
+
   // Mount and Route need to register root components for snapshot logic
   m.mount = function( el, component ){
     return mithril.mount( el, root( component ) )
@@ -164,6 +171,6 @@ window.m = ( function( mithril ){
       return mithril.route.apply( this, arguments )
     }
   }
-  
+
   return m
 }( m ) );
