@@ -8,24 +8,29 @@ const history   = new WeakMap()
 let   reverting = false
 
 // Register views to bind their roots to the above
+// so we can provide exit animations with the right DOM reference
 const register = view =>
   function registeredView( ctrl ){
-    const output     = view( ...arguments )
+    const output = view( ...arguments )
 
-    // Don't register exits during a reversion
-    if( reverting )
-      return output
+    // In case of a registered exit animation...
+    if( ctrl.exit ){
+      let node = output
 
-    const { attrs }  = output
-    const { config } = attrs
+      // If the view output is an array, deal with the first element
+      while( node.length )
+        node = node[ 0 ]
 
-    if( ctrl.exit )
-      attrs.config = function superConfig( el ){
+      const { config } = node.attrs
+
+      // Map the root / first child element to the component instance
+      node.attrs.config = function superConfig( el ){
         roots.set( ctrl, el )
 
         if( config )
-          return config.call( this, ...arguments )
+          return config.apply( this, arguments )
       }
+    }
 
     return output
   }
@@ -117,12 +122,10 @@ export default Object.assign(
     const output = mithril( ...arguments )
 
     output.children.forEach( child => {
-      const { view } = child
-
-      if( view )
+      if( view in child )
         // ...and get their views to register controllers and root nodes
         Object.assign( child, {
-          view : register( view )
+          view : register( child.view )
         } )
     } )
 
@@ -133,8 +136,12 @@ export default Object.assign(
   mithril,
 
   {
+    // m.component invocations produce virtual DOM.
+    // We need to intercede to get at the view.
     component : ( component, ...rest ) =>
-      mithril.component( register( component ), ...rest ),
+      mithril.component( Object.assign( component, {
+        view : register( component.view )
+      } ), ...rest ),
 
     // Mount and Route need to register root components for snapshot logic
     mount : ( el, component ) =>

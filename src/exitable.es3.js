@@ -7,18 +7,22 @@ window.m = ( function( mithril ){
   var reverting = false
 
   // Register views to bind their roots to the above
+  // so we can provide exit animations with the right DOM reference
   function register( view ){
     return function registeredView( ctrl ){
       var output = view.apply( this, arguments )
 
+      // In case of a registered exit animation...
       if( ctrl.exit ){
         var node = output
 
+        // If the view output is an array, deal with the first element
         while( node.length )
           node = node[ 0 ]
 
         var config = node.attrs.config
 
+        // Map the root / first child element to the component instance
         node.attrs.config = function superConfig( el ){
           roots.set( ctrl, el )
 
@@ -117,6 +121,7 @@ window.m = ( function( mithril ){
     return output
   }
 
+  // Helper: array from map
   function array( map ){
     var array   = []
     var entries = map.entries()
@@ -133,14 +138,13 @@ window.m = ( function( mithril ){
     return array
   }
 
-  // Export a patched Mithril API
-
   // Core m function needs to sniff out components...
   function m(){
     var output = mithril.apply( this, arguments )
 
     for( var i = 0; i < output.children.length; i++ )
       if( output.children[ i ].view )
+        // ...and get their views to register controllers and root nodes
         output.children[ i ].view = register( output.children[ i ].view )
 
     return output
@@ -151,6 +155,8 @@ window.m = ( function( mithril ){
     if( Object.prototype.hasOwnProperty.call( mithril, key ) )
       m[ key ] = mithril[ key ]
 
+  // m.component invocations produce virtual DOM.
+  // We need to intercede to get at the view.
   m.component = function( component ){
     component.view = register( component.view )
 
@@ -172,5 +178,6 @@ window.m = ( function( mithril ){
     }
   }
 
+  // Export a patched Mithril API
   return m
 }( m ) );
