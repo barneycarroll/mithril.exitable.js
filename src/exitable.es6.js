@@ -149,7 +149,7 @@ export default Object.assign(
 
     route( el, path, map ){
       if( map ){
-        return mithril.route( el, path, reduce( root ) )
+        return mithril.route( el, path, reduce( map, root ) )
       }
       else {
         return mithril.route( ...arguments )
