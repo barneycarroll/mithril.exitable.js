@@ -1,5 +1,7 @@
 # mithril.exitable.js
 
+[![Join the chat at https://gitter.im/barneycarroll/mithril.exitable.js](https://badges.gitter.im/barneycarroll/mithril.exitable.js.svg)](https://gitter.im/barneycarroll/mithril.exitable.js?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 A [Mithril](http://mithril.js.org/) wrapper whose controllers gain a new `exit` hook for outgoing animations.
 
 When you bind an `exit` method to a controller, we observe the output of each draw: as soon as we detect that the corresponding component has been removed from the view, the draw loop is frozen; all your animations execute, and when they're done, Mithril goes about business as usual.
