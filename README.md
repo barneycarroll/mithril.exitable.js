@@ -8,13 +8,17 @@ When you bind an `exit` method to a controller, we observe the output of each dr
 
 ## Demos
 
-* [Alternating components](https://jsfiddle.net/barney/xko3kdaL/)
-* [Modal popup](https://jsfiddle.net/barney/gft3467m/)
-* …
+* [x] [Alternating components](https://jsfiddle.net/barney/xko3kdaL/)
+* [x] [Modal popup](https://jsfiddle.net/barney/gft3467m/)
+* [ ] Dynamic lists 
+* [ ] Some kind of Bootstrap / Material Design kitchen sink interface
+* …suggest more in the issues!
 
 ## Usage
 
 Exitable is a Mithril wrapper or patch, meaning you need to bring your own Mithril for Exitable to use as a base. Exitable then wraps certain Mithril methods to extend it with its own behaviour, and returns you a patched version of Mithril to use in your application.
+
+This means your original Mithril is untouched, and eg any other Mithril dependent plugins in your codebase will get access to the 'clean' version rather than going through Exitable, in contrast to eg jQuery plugins which modify the core jQuery object.
 
 ### Which source?
 
