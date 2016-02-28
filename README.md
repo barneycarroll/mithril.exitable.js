@@ -12,7 +12,8 @@ When you bind an `exit` method to a controller, we observe the output of each dr
 * [x] [Modal popup](https://jsfiddle.net/barney/gft3467m/)
 * [ ] Dynamic lists 
 * [ ] Some kind of Bootstrap / Material Design kitchen sink interface
-* …suggest more in the issues!
+
+…suggest more in the issues!
 
 ## Usage
 
@@ -22,14 +23,15 @@ This means your original Mithril is untouched, and eg any other Mithril dependen
 
 ### Which source?
 
-#### ES6 
-
-**NB:** Exitable isn't packaged just yet. The ES6 module is spec-compliant but has no opinions about how you consume it. At the time of writing there is no native implementation of ES6 module import resolution.
+#### ES6 / CommonJS / Browserify
 
 The Exitable module depends on Mithril being available as a module as `mithril`. In turn, you should import Exitable instead of plain Mithril.
 
 ```javascript
+// ES6 
 import m from 'mithril.exitable'
+// CommonJS
+var m = require( 'mithril.exitable' )
 ```
 
 #### ES3
