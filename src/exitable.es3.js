@@ -1,9 +1,9 @@
 ( function( root, factory ){
        if ( define && define.amd )
-    define( [ 'm' ], factory )
+    define( [ 'm', 'es6 collections'], factory )
     
   else if ( exports && module && module.exports == exports )
-    module.exports = factory( require( 'm' ) )
+    module.exports = factory( require( 'm' ), require( 'es6-collections' ) )
   
   else
     root.m = factory( root.m )
