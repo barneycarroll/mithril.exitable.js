@@ -1,4 +1,13 @@
-window.m = ( function( mithril ){
+( function( root, factory ){
+       if ( define && define.amd )
+    define( [ 'm' ], factory )
+    
+  else if ( exports && module && module.exports == exports )
+    module.exports = factory( require( 'm' ) )
+  
+  else
+    root.m = factory( root.m )
+} )( this, function( mithril ){
   // Registry of controllers and corresponding root nodes
   var roots     = new Map()
   // A record of recent view outputs for every root-level component
@@ -180,4 +189,4 @@ window.m = ( function( mithril ){
 
   // Export a patched Mithril API
   return m
-}( m ) );
+} );
