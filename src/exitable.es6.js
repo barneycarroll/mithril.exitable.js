@@ -76,7 +76,7 @@ const root = ( { view, ...component } ) =>
         output = { subtree : 'retain' }
 
         // Freeze the draw process
-        m.startComputation()
+        mithril.startComputation()
 
         // ...until all exits have resolved
         Promise.all( exits ).then( () => {
@@ -88,16 +88,16 @@ const root = ( { view, ...component } ) =>
           reverting = true
 
           // Next draw should not patch, only diff
-          m.redraw.strategy( 'none' )
+          mithril.redraw.strategy( 'none' )
 
           // Force a synchronous draw despite being frozen
-          m.redraw( true )
+          mithril.redraw( true )
 
           // Now it's as if we were never here to begin with
           reverting = false
 
           // Resume business as usual
-          m.endComputation()
+          mithril.endComputation()
         } )
       }
 
@@ -115,14 +115,33 @@ const reduce = ( object, transformer ) =>
     {}
   )
 
-// Export a patched Mithril API
+const hooks  = {
+  // m.component invocations produce virtual DOM.
+  // We need to intercede to get at the view.
+  component : ( component, ...rest ) =>
+    mithril.component( Object.assign( component, {
+      view : register( component.view )
+    } ), ...rest ),
+
+  // Mount and Route need to register root components for snapshot logic
+  mount     : ( el, component ) =>
+    mithril.mount( el, root( component ) ),
+
+  route     : ( el, path, map ) => map
+    ? mithril.route( el, path, reduce( map, root ) )
+    : mithril.route( ...arguments )
+}
+
+// The patched Mithril API
 export default Object.assign(
-  // Core m function needs to sniff out components...
-  function m(){
+  function( first ){
+    if( first.view )
+      return hooks.component( ...arguments )
+
     const output = mithril( ...arguments )
 
     output.children.forEach( child => {
-      if( view in child )
+      if( child.view )
         // ...and get their views to register controllers and root nodes
         Object.assign( child, {
           view : register( child.view )
@@ -132,28 +151,7 @@ export default Object.assign(
     return output
   },
 
-  // Then we have all the m methods
   mithril,
 
-  {
-    // m.component invocations produce virtual DOM.
-    // We need to intercede to get at the view.
-    component : ( component, ...rest ) =>
-      mithril.component( Object.assign( component, {
-        view : register( component.view )
-      } ), ...rest ),
-
-    // Mount and Route need to register root components for snapshot logic
-    mount : ( el, component ) =>
-      mithril.mount( el, root( component ) ),
-
-    route( el, path, map ){
-      if( map ){
-        return mithril.route( el, path, reduce( map, root ) )
-      }
-      else {
-        return mithril.route( ...arguments )
-      }
-    }
-  }
+  hooks
 )
