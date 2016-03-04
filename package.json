@@ -23,5 +23,11 @@
   "bugs": {
     "url": "https://github.com/barneycarroll/mithril.exitable.js/issues"
   },
-  "homepage": "https://github.com/barneycarroll/mithril.exitable.js#readme"
+  "homepage": "https://github.com/barneycarroll/mithril.exitable.js#readme",
+  "dependencies" : {
+    "es6-collections" : "0.5.5"
+  },
+  "peerDependencies" : {
+    "mithril" : "0.2.0"
+  }
 }
