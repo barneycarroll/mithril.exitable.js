@@ -139,7 +139,10 @@ window.m = ( function( mithril ){
   }
 
   // Core m function needs to sniff out components...
-  function m(){
+  function m( first ){
+    if( 'view' in first )
+      return m.component.apply( this, arguments )
+
     var output = mithril.apply( this, arguments )
 
     for( var i = 0; i < output.children.length; i++ )
