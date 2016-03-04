@@ -102,16 +102,16 @@
           reverting = true
 
           // Next draw should not patch, only diff
-          m.redraw.strategy( 'none' )
+          mithril.redraw.strategy( 'none' )
 
           // Force a synchronous draw despite being frozen
-          m.redraw( true )
+          mithril.redraw( true )
 
           // Now it's as if we were never here to begin with
           reverting = false
 
           // Resume business as usual
-          m.endComputation()
+          mithril.endComputation()
         } )
       }
 
@@ -148,7 +148,10 @@
   }
 
   // Core m function needs to sniff out components...
-  function m(){
+  function m( first ){
+    if( first.view )
+      return m.component.apply( this, arguments )
+
     var output = mithril.apply( this, arguments )
 
     for( var i = 0; i < output.children.length; i++ )
