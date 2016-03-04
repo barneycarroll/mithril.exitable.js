@@ -140,7 +140,7 @@ window.m = ( function( mithril ){
 
   // Core m function needs to sniff out components...
   function m( first ){
-    if( Object.prototype.hasOwnProperty.call( object, 'view' ) )
+    if( Object.prototype.hasOwnProperty.call( first, 'view' ) )
       return m.component.apply( this, arguments )
 
     var output = mithril.apply( this, arguments )
