@@ -93,16 +93,16 @@ window.m = ( function( mithril ){
           reverting = true
 
           // Next draw should not patch, only diff
-          m.redraw.strategy( 'none' )
+          mithril.redraw.strategy( 'none' )
 
           // Force a synchronous draw despite being frozen
-          m.redraw( true )
+          mithril.redraw( true )
 
           // Now it's as if we were never here to begin with
           reverting = false
 
           // Resume business as usual
-          m.endComputation()
+          mithril.endComputation()
         } )
       }
 
