@@ -1,12 +1,12 @@
 ( function( root, factory ){
-       if ( define && define.amd )
+       if ( typeof define === 'function' && define.amd )
     define( [ 'm', 'es6 collections'], factory )
     
-  else if ( exports && module && module.exports == exports )
+  else if ( typeof exports === 'object'  && typeof exports.nodeName !== 'string' )
     module.exports = factory( require( 'm' ), require( 'es6-collections' ) )
   
   else
-    root.m = factory( root.m )
+    ( root || window ).m = factory( ( root || window ).m )
 } )( this, function( mithril ){
   // Registry of controllers and corresponding root nodes
   var roots     = new Map()
