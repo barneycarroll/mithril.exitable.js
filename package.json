@@ -1,6 +1,6 @@
 {
   "name": "mithril.exitable",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Exit animations for Mithril components: provide controllers with an `exit` hook which will trigger when the component disappears from the virtual DOM (but before it's removed from live DOM), locking the draw process while you perform animations.",
   "main": "src/exitable.es3.js",
   "jsnext:main": "src/exitable.es6.js",
