@@ -32,8 +32,11 @@
         var config = node.attrs.config
 
         // Map the root / first child element to the component instance
-        node.attrs.config = function superConfig( el ){
+        node.attrs.config = function superConfig( el, init, ctxt, snapshot ){
           roots.set( ctrl, el )
+          
+          if( history.has( ctrl )
+            history.set( ctrl, snapshot )
 
           if( config )
             return config.apply( this, arguments )
