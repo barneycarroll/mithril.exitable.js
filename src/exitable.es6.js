@@ -24,8 +24,11 @@ const register = view =>
       const { config } = node.attrs
 
       // Map the root / first child element to the component instance
-      node.attrs.config = function superConfig( el ){
+      node.attrs.config = function superConfig( el, init, ctxt, snapshot ){
         roots.set( ctrl, el )
+
+        if( history.has( ctrl ) )
+          history.set( ctrl, snapshot )
 
         if( config )
           return config.apply( this, arguments )
@@ -55,7 +58,7 @@ const root = ( { view, ...component } ) =>
       roots.clear()
 
       // Execute the view, registering all exitables
-      let output     = register( view ).call( this, ...arguments )
+      let output     = register( view ).apply( this, arguments )
 
       // Record the output, we will need to return to this state if the next draw has exits
       history.set( ctrl, output )

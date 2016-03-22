@@ -1,10 +1,10 @@
 ( function( root, factory ){
        if ( typeof define === 'function' && define.amd )
     define( [ 'm', 'es6 collections'], factory )
-    
+
   else if ( typeof exports === 'object'  && typeof exports.nodeName !== 'string' )
     module.exports = factory( require( 'm' ), require( 'es6-collections' ) )
-  
+
   else
     ( root || window ).m = factory( ( root || window ).m )
 } )( this, function( mithril ){
@@ -34,8 +34,8 @@
         // Map the root / first child element to the component instance
         node.attrs.config = function superConfig( el, init, ctxt, snapshot ){
           roots.set( ctrl, el )
-          
-          if( history.has( ctrl )
+
+          if( history.has( ctrl ) )
             history.set( ctrl, snapshot )
 
           if( config )
