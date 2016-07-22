@@ -29,7 +29,7 @@ const register = view =>
 
         if( history.has( ctrl ) )
           history.set( ctrl, snapshot )
-        
+
         if( ctrl.enter && !init )
           ctrl.enter( el )
 
@@ -147,7 +147,7 @@ export default Object.assign(
     const output = mithril( ...arguments )
 
     output.children.forEach( child => {
-      if( child.view )
+      if( 'view' in child )
         // ...and get their views to register controllers and root nodes
         Object.assign( child, {
           view : register( child.view )

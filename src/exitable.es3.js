@@ -37,7 +37,7 @@
 
           if( history.has( ctrl ) )
             history.set( ctrl, snapshot )
-            
+
           if( ctrl.enter && !init )
             ctrl.enter( el )
 
@@ -161,7 +161,7 @@
     var output = mithril.apply( this, arguments )
 
     for( var i = 0; i < output.children.length; i++ )
-      if( output.children[ i ].view )
+      if( output.children[ i ] && output.children[ i ].view )
         // ...and get their views to register controllers and root nodes
         output.children[ i ].view = register( output.children[ i ].view )
 
