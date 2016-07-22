@@ -37,6 +37,9 @@
 
           if( history.has( ctrl ) )
             history.set( ctrl, snapshot )
+            
+          if( ctrl.enter && !init )
+            ctrl.enter( el )
 
           if( config )
             return config.apply( this, arguments )
