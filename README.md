@@ -2,7 +2,7 @@
 
 [![Join the chat at https://gitter.im/barneycarroll/mithril.exitable.js](https://badges.gitter.im/barneycarroll/mithril.exitable.js.svg)](https://gitter.im/barneycarroll/mithril.exitable.js?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-A [Mithril](http://mithril.js.org/) wrapper whose controllers gain a new `exit` hook for outgoing animations.
+A [Mithril](http://mithril.js.org/) wrapper whose controllers gain a new `exit` hook for outgoing animations. Exitable is intended for use with the Mithril 0 API - it is redundant in (at the time of writing, forthcoming) Mithril 1, thanks to the [`onbeforeremove`](https://github.com/lhorie/mithril.js/blob/rewrite/docs/lifecycle-methods.md#onbeforeremove) hook.
 
 When you bind an `exit` method to a controller, we observe the output of each draw: as soon as we detect that the corresponding component has been removed from the view, the draw loop is frozen; all your animations execute, and when they're done, Mithril goes about business as usual.
 
@@ -10,7 +10,7 @@ When you bind an `exit` method to a controller, we observe the output of each dr
 
 * [x] [Alternating components](https://jsfiddle.net/barney/xko3kdaL/)
 * [x] [Modal popup](https://jsfiddle.net/barney/gft3467m/)
-* [ ] Dynamic lists 
+* [ ] Dynamic lists
 * [ ] Some kind of Bootstrap / Material Design kitchen sink interface
 
 …suggest more in the issues!
@@ -28,7 +28,7 @@ This means your original Mithril is untouched, and eg any other Mithril dependen
 The Exitable module depends on Mithril being available as a module as `mithril`. In turn, you should import Exitable instead of plain Mithril.
 
 ```javascript
-// ES6 
+// ES6
 import m from 'mithril.exitable'
 // CommonJS
 var m = require( 'mithril.exitable' )
@@ -50,7 +50,7 @@ To register an exit animation, bind a function to the `exit` key of the controll
 
 ```javascript
 var myComponent {
-  controller(){
+  controller : function(){
     this.exit = myAnimation
   },
   // ...
@@ -67,9 +67,35 @@ The animation function receives the live DOM element representing the root of th
 // ...
 ```
 
+For convenience, Exitable also provides an `enter` method hook, so you can define entry and exit animations in the same place.
+
+```javascript
+{
+  controller : function(){
+    this.enter = function(el){
+      // ...
+    }
+  },
+  view : () =>
+    m( '.root' )
+}
+
+// Is equivalent to
+
+{
+  view : () =>
+    m( '.root', {
+      config : ( el, init ) => {
+        if( !init )
+          // ...
+      }
+    } )
+}
+```
+
 ### `exit` functions
 
-What should the animation do? That's up to you: although I highly recommend Julian Shapiro's [Velocity](http://julian.com/research/velocity/) library, which can be supplemented with a [UI pack](http://julian.com/research/velocity/#uiPack) full of pre-registered animations (which are used throughout the demos). 
+What should the animation do? That's up to you: although I highly recommend Julian Shapiro's [Velocity](http://julian.com/research/velocity/) library, which can be supplemented with a [UI pack](http://julian.com/research/velocity/#uiPack) full of pre-registered animations (which are used throughout the demos).
 
 All `exit` functions must return a '[thenable](https://promisesaplus.com/)' so that Exitable knows when all animations are finished in order to resume Mithril's draw loop.
 
@@ -100,8 +126,8 @@ this.exit = el =>
 ```javascript
 this.exit = function( el ){
   var thenable = { then : function(){} }
-  
+
   $( el ).fadeOut( thenable.then )
-  
+
   return thenable
 }
