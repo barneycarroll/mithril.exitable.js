@@ -2,7 +2,7 @@
 
 [![Join the chat at https://gitter.im/barneycarroll/mithril.exitable.js](https://badges.gitter.im/barneycarroll/mithril.exitable.js.svg)](https://gitter.im/barneycarroll/mithril.exitable.js?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-A [Mithril](http://mithril.js.org/) wrapper whose controllers gain a new `exit` hook for outgoing animations. Exitable is intended for use with the Mithril 0 API - it is redundant in (at the time of writing, forthcoming) Mithril 1, thanks to the [`onbeforeremove`](https://github.com/lhorie/mithril.js/blob/rewrite/docs/lifecycle-methods.md#onbeforeremove) hook.
+A [Mithril](http://mithril.js.org/) wrapper whose controllers gain a new `exit` hook for outgoing animations. Exitable is intended for use with the Mithril v0.2.X API ([`ctrl.exit` is *not* equivalent to Mithril v1.X's `onbeforemove`])[#compared-to-onbeforeremove].
 
 When you bind an `exit` method to a controller, we observe the output of each draw: as soon as we detect that the corresponding component has been removed from the view, the draw loop is frozen; all your animations execute, and when they're done, Mithril goes about business as usual.
 
@@ -10,8 +10,6 @@ When you bind an `exit` method to a controller, we observe the output of each dr
 
 * [x] [Alternating components](https://jsfiddle.net/barney/xko3kdaL/)
 * [x] [Modal popup](https://jsfiddle.net/barney/gft3467m/)
-* [ ] Dynamic lists
-* [ ] Some kind of Bootstrap / Material Design kitchen sink interface
 
 …suggest more in the issues!
 
@@ -131,3 +129,16 @@ this.exit = function( el ){
 
   return thenable
 }
+
+## Compared to `onbeforeremove`
+
+Exitable's `ctrl.exit` differs from Mithril v1.X's [`vnode.onbeforeremove`](https://github.com/lhorie/mithril.js/blob/rewrite/docs/lifecycle-methods.md#onbeforeremove) hook in a couple of ways: `onbeforeremove` can be bound to any element - not just a component root - which is a nominal convenience; however, `onbeforeremove` will only trigger for elements which are removed *while their parents are persisted* - whereas exitable components will always be respected even if they are only removed as a consequence of an ancestor being detached from the tree.
+
+This example of a recursive tree of nodes with simple but dynamic exit sequences highlights differences:
+
+| | [`ctrl.exit`](https://jsbin.com/fulite/edit?html,js,console,output) | [`onbeforeremove`](https://jsbin.com/qamafu/1/edit?js,output) |
+| :--- | :--- | :--- |
+| **Applicability** | Can only be used on components | Can be used on any virtual node |
+| | Invoked for each node to disappear from the tree | Invoked only for nodes detached from persistent parents |
+| **Lifecycle** | Blocks the Mithril view loop until all exit sequences complete | Doesn't block, but preserves the node's last DOM until its sequence completes |
+| | | Can lose an item's position in a list |
